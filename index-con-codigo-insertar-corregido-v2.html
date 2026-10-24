@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HTML Visual Studio</title>
+<style>
+:root{--bg:#f4f5f8;--pn:#fff;--tx:#1d2130;--mu:#6b7285;--bd:#dde0e8;--ac:#4f6bff;--dg:#d9534f}
+@media(prefers-color-scheme:dark){:root{--bg:#14161d;--pn:#1c1f29;--tx:#e8eaf2;--mu:#9097ab;--bd:#2d3140;--ac:#7d93ff}}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{font:14px system-ui,sans-serif;background:var(--bg);color:var(--tx);display:flex;flex-direction:column}
+button,input,select,textarea{font:inherit;color:inherit;background:var(--pn);border:1px solid var(--bd);border-radius:6px;padding:5px 9px}
+button{cursor:pointer}button:hover{border-color:var(--ac)}button.p{background:var(--ac);color:#fff;border-color:var(--ac)}button.on{border-color:var(--ac);color:var(--ac)}button:disabled{opacity:.4;cursor:default}
+header{display:flex;gap:6px;align-items:center;padding:8px 12px;background:var(--pn);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+header b{font-size:15px}.sp{flex:1}.mut{color:var(--mu);font-size:12px}
+main{flex:1;display:flex;min-height:0}
+aside{width:260px;background:var(--pn);overflow:auto;padding:10px;border-inline:1px solid var(--bd)}
+#ct{flex:1;display:flex;flex-direction:column;min-width:0}
+#bar{display:flex;gap:6px;padding:8px;align-items:center;flex-wrap:wrap}
+#fw{flex:1;display:flex;justify-content:flex-start;overflow:auto;padding:0 8px 8px}
+iframe{width:100%;height:100%;border:1px solid var(--bd);background:#fff;border-radius:6px;margin:0 auto;flex:none}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}.chips button{padding:2px 7px;font-size:12px}
+.it{padding:4px 6px;border-radius:5px;cursor:pointer;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.it:hover,.it.s{background:color-mix(in srgb,var(--ac) 18%,transparent)}
+.row{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}aside label{display:block;margin:7px 0 2px;font-size:12px;color:var(--mu)}
+aside input:not([type=color]),aside textarea,aside select{width:100%}textarea{min-height:70px}
+h4{margin:14px 0 4px}.ov{position:fixed;inset:0;background:#0007;display:flex;align-items:center;justify-content:center;z-index:9}
+.md{background:var(--pn);border-radius:10px;padding:16px;width:min(460px,92vw);max-height:90vh;overflow:auto}.md h3{margin:0 0 10px}.ft{display:flex;justify-content:flex-end;gap:6px;margin-top:12px}
+#ts{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;z-index:10}
+.t{background:#222a;background:#262a38;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px}.t.e{background:#b3342f}.t.w{background:#9a6b00}.t.o{background:#1f7a46}
+#dz{text-align:center;margin:auto;color:var(--mu)}
+.dbf{box-shadow:0 -2px 0 var(--ac)}.daf{box-shadow:0 2px 0 var(--ac)}.din{outline:2px solid var(--ac)}
+@media(max-width:900px){main{flex-direction:column;overflow:auto}aside{width:auto;max-height:40vh;border:0}#ct{min-height:60vh}}
+</style></head><body>
+<header><b>HTML Visual Studio</b><span id=pn class=mut>Sin proyecto</span><span id=dirty class=mut></span><span class=sp></span>
+<button id=bImp class=p>Importar HTML</button><button id=bDemo>Demo</button><button id=bUn disabled>↶</button><button id=bRe disabled>↷</button>
+<button id=bSave>Guardar proyecto</button><button id=bVd disabled title="Para páginas que dibujan sus vídeos desde una lista de datos">Vídeos de la página</button><button id=bDx>Diagnóstico</button><button id=bSt>Estadísticas</button><button id=bHtml>Exportar HTML</button><button id=bZip class=p>Exportar ZIP</button>
+<input id=fi type=file accept=".html,.htm,.json,.hvs" hidden></header>
+<main><aside id=L><div class=chips id=chips></div><div id=list class=mut>Importa un HTML o carga la demo.</div>
+<h4>Buscar y reemplazar</h4><input id=fq placeholder="Buscar texto"><input id=fr placeholder="Reemplazar por" style="margin-top:4px"><div class=row><button id=bFind>Buscar</button><button id=bRall>Reemplazar todo</button></div><div id=fres></div></aside>
+<div id=ct><div id=bar><button id=bEd class=on>Editar página</button><button data-w="100%" class=dv>Escritorio</button><button data-w="1440px" class=dv title="Así se verá en una pantalla de computadora grande">Escritorio ancho</button><button data-w="768px" class=dv>Tableta</button><button data-w="390px" class=dv>Móvil</button><span class=sp></span><input id=wd type=number min=280 max=2400 placeholder="ancho px" style="width:92px"><button id=bOr>Ver original</button></div>
+<div id=fw><div id=dz>Arrastra aquí un archivo .html</div><iframe id=fr2 sandbox="allow-scripts" hidden></iframe></div></div>
+<aside id=R><div class=mut>Activa «Editar página» y haz clic en un elemento.</div></aside></main><div id=ts></div>
+<script>
+const $=s=>document.querySelector(s),frame=$('#fr2');
+let orig='',model=null,ops=[],redo=[],assets={},nid=1,an=1,sel=null,edit=true,view='mod',cat='all',clean=0,scrollY=0,name='proyecto';
+const isTT=e=>!!(e&&e.classList&&(e.classList.contains('tiktok-embed')||e.classList.contains('hvs-tt')));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m,k){const d=document.createElement('div');d.className='t '+(k||'');d.textContent=m;$('#ts').append(d);setTimeout(()=>d.remove(),k==='e'?6000:3000)}
+function dlg(title,body,ok){return new Promise(res=>{const o=document.createElement('div');o.className='ov';o.innerHTML=`<div class=md><h3>${title}</h3><div>${body}</div><div class=ft><button class=x>Cancelar</button><button class="p k">${ok||'Aceptar'}</button></div></div>`;document.body.append(o);dlg.last=o;o.querySelector('.x').onclick=()=>{o.remove();res(null)};o.querySelector('.k').onclick=()=>res(o)})}
+const ask=async m=>{const o=await dlg('Confirmar',m,'Confirmar');o&&o.remove();return !!o};
+const q=id=>model&&model.querySelector(`[data-hvs-id="${id}"]`);
+const okU=(u,dat)=>{try{const p=new URL(u,'https://x.invalid').protocol;return['http:','https:','mailto:','tel:'].includes(p)||(dat&&p==='data:')}catch{return false}};
+const readURL=b=>new Promise((r,j)=>{const f=new FileReader();f.onload=()=>r(f.result);f.onerror=()=>j(f.error);f.readAsDataURL(b)});
+/* ---------- modelo y operaciones ---------- */
+function ser(d,strip){const c=d.documentElement.cloneNode(true);if(strip){c.querySelectorAll('[data-hvs-id]').forEach(e=>e.removeAttribute('data-hvs-id'));const w=d.createTreeWalker(c,128),l=[];while(w.nextNode())if(/^hvs:/.test(w.currentNode.data))l.push(w.currentNode);l.forEach(n=>n.remove())}return'<!DOCTYPE html>\n'+c.outerHTML}
+function load(text,n){if(!/<(html|body|div|h1|p|section|img)\b/i.test(text))return toast('El archivo no parece HTML válido. No se ha cambiado nada.','e');
+ const d=new DOMParser().parseFromString(text,'text/html');nid=1;d.body.querySelectorAll('*').forEach(e=>e.setAttribute('data-hvs-id',nid++));d.body.querySelectorAll('.hvs-fac').forEach(e=>{const s=e.getAttribute('data-s')||'',st=e.getAttribute('style')||'',yt=/^https:\/\/www\.youtube\.com\/embed\/([\w-]{11})/.exec(s);
+  if(yt||(/tiktok\.com\/player\/v1\//.test(s)&&!/url\(/i.test(st))){const f=d.createElement('iframe');f.setAttribute('data-hvs-id',e.getAttribute('data-hvs-id'));f.setAttribute('src',yt?'https://www.youtube.com/embed/'+yt[1]+'?rel=0&modestbranding=1':s.split('?')[0]);f.setAttribute('title',e.getAttribute('aria-label')||'Vídeo');f.setAttribute('loading','lazy');f.setAttribute('allow',yt?YTALLOW:'encrypted-media; picture-in-picture; fullscreen');f.setAttribute('allowfullscreen','');f.setAttribute('referrerpolicy','strict-origin-when-cross-origin');f.setAttribute('style',st);['background','color','align-items','justify-content','font-size','cursor'].forEach(p=>f.style.removeProperty(p));f.style.display='block';e.replaceWith(f)}
+  else{e.setAttribute('onclick',FACJS);e.setAttribute('onkeydown',FACK);if(/tiktok\.com\/player\/v1\/\d+$/.test(s))e.setAttribute('data-s',s+'?autoplay=1')}});hE.clear();ex.clear();
+ orig=text;model=d;ops=[];redo=[];assets={};sel=null;clean=0;view='mod';name=n.replace(/(\.hvs)?\.(html?|json|hvs)$/i,'');$('#pn').textContent=n;$('#dz').hidden=true;frame.hidden=false;refresh();toast('Importado: '+n,'o');if(vdFind())toast('Esta página dibuja sus vídeos desde una lista de datos: edítalos en «Vídeos de la página».','o')}
+function findNode(id){const e=q(id);if(e)return e;const w=model.createTreeWalker(model.body,128);while(w.nextNode())if(w.currentNode.data==='hvs:'+id)return w.currentNode;return null}
+function app(o,useB){const v=useB?o.b:o.a;
+ if(o.k==='group'){(useB?o.list:[...o.list].reverse()).forEach(x=>app(x,useB));return}
+ const n=findNode(!useB&&o.to?o.to:o.id);if(!n)return;
+ if(o.k==='ins'){if(useB){const t=document.createElement('template');t.innerHTML=o.h;n.after(t.content)}else o.r.forEach(i=>{const x=q(i);x&&x.remove()})}
+ else if(o.k==='outer'){const t=document.createElement('template');t.innerHTML=v;n.replaceWith(t.content)}
+ else if(o.k==='attr')v==null?n.removeAttribute(o.n):n.setAttribute(o.n,v);
+ else if(o.k==='style'){v?n.style.setProperty(o.n,v):n.style.removeProperty(o.n);if(!n.getAttribute('style'))n.removeAttribute('style')}
+ else if(o.k==='move'){n.remove();const P=v.p?q(v.p):model.body;P.insertBefore(n,P.childNodes[v.i]||null)}
+ else if(o.k==='text')n.textContent=v;else if(o.k==='html')n.innerHTML=v;else if(o.k==='tn')n.childNodes[o.i].nodeValue=v}
+function push(o){app(o,1);ops.push(o);redo=[];refresh()}
+const setAttr=(id,n,b)=>{const e=q(id);push({k:'attr',id,n,a:e.getAttribute(n),b})};
+const setSt=(id,n,b)=>{const e=q(id);push({k:'style',id,n,a:e.style.getPropertyValue(n),b})};
+const stamp=h=>h.replace(/<([a-z][\w-]*)/gi,m=>m+' data-hvs-id="'+(nid++)+'"');
+const ins=(id,h)=>{const t=document.createElement('template');t.innerHTML=stamp(h);push({k:'ins',id,h:t.innerHTML,r:[...t.content.children].map(x=>+x.getAttribute('data-hvs-id'))})};
+const undo=()=>{const o=ops.pop();if(o){app(o,0);redo.push(o);refresh()}},rdo=()=>{const o=redo.pop();if(o){app(o,1);ops.push(o);refresh()}};
+/* ---------- puente del iframe aislado ---------- */
+const BRIDGE=`(function(){var E=false;function f(e){while(e&&e!==document.body){if(e.getAttribute&&e.getAttribute('data-hvs-id'))return e;e=e.parentElement}return null}
+function g(e){var x=e.clientX,y=e.clientY,fr=document.querySelectorAll('iframe'),i,r,t;for(i=0;i<fr.length;i++){r=fr[i].getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom){t=f(fr[i]);if(t)return t}}return f(e.target)}
+var s=document.createElement('style');s.textContent='.hvs-e iframe{pointer-events:none!important}.hvs-h{outline:2px dashed #6c8cff!important;outline-offset:-2px}.hvs-s{outline:3px solid #ff6a3d!important;outline-offset:-3px}';document.head.appendChild(s);
+function m(c,el){var o=document.querySelector('.'+c);if(o)o.classList.remove(c);if(el)el.classList.add(c)}
+document.addEventListener('mousemove',function(e){if(E)m('hvs-h',g(e))});
+document.addEventListener('submit',function(e){if(E)e.preventDefault()},true);
+document.addEventListener('click',function(e){if(!E)return;e.preventDefault();e.stopPropagation();var t=g(e);if(t){m('hvs-s',t);parent.postMessage({hvs:1,t:'sel',id:t.getAttribute('data-hvs-id')},'*')}},true);
+addEventListener('message',function(e){if(e.source!==parent)return;var d=e.data||{};if(d.t==='mode'){E=!!d.edit;document.documentElement.classList.toggle('hvs-e',E)}if(d.t==='sel'){var el=document.querySelector('[data-hvs-id="'+String(d.id).replace(/\\D/g,'')+'"]');m('hvs-s',el);if(el&&d.go)el.scrollIntoView({block:'center'})}if(d.t==='scroll')scrollTo(0,+d.y||0)});
+addEventListener('scroll',function(){parent.postMessage({hvs:1,t:'scr',y:scrollY},'*')});
+parent.postMessage({hvs:1,t:'ready'},'*')})();`;
+let pt;const pv=()=>{clearTimeout(pt);pt=setTimeout(()=>{if(!model)return;let h;if(view==='orig')h=orig;else{const c=model.documentElement.cloneNode(true),s=model.createElement('script');s.textContent=BRIDGE;if(hE.size){const st=model.createElement('style');st.textContent=[...hE].map(i=>'[data-hvs-id="'+i+'"]{display:none!important}').join('');c.querySelector('head').append(st)}c.querySelector('body').append(s);h='<!DOCTYPE html>\n'+c.outerHTML;for(const[p,a]of Object.entries(assets))h=h.split(p).join(a.du||a.u)}frame.srcdoc=h},50)};
+addEventListener('message',e=>{const d=e.data;if(e.source!==frame.contentWindow||!d||d.hvs!==1)return;
+ if(d.t==='sel'&&/^\d+$/.test(String(d.id))){sel=+d.id;exp(sel);list();props();}
+ else if(d.t==='scr')scrollY=+d.y||0;
+ else if(d.t==='ready'){const w=frame.contentWindow;w.postMessage({hvs:1,t:'mode',edit:edit&&view==='mod'},'*');w.postMessage({hvs:1,t:'scroll',y:scrollY},'*');if(sel)w.postMessage({hvs:1,t:'sel',id:sel},'*')}});
+/* ---------- listas y categorías ---------- */
+const CATS={lay:'Capas',all:'Todos',text:'Textos',img:'Imágenes',vid:'Vídeos',btn:'Botones',lnk:'Enlaces',sec:'Secciones',hid:'Ocultos',rev:'Revisar'};
+function cats(e){const t=e.tagName,c=['all'],st=e.getAttribute('style')||'';
+ if(/^(H[1-6]|P|LI|BLOCKQUOTE|LABEL|FIGCAPTION)$/.test(t)&&e.textContent.trim()&&!isTT(e))c.push('text');
+ if(t==='IMG'||t==='PICTURE'||/url\(/i.test(st))c.push('img');if(t==='VIDEO'||t==='IFRAME'||e.classList.contains('hvs-fac')||isTT(e))c.push('vid');
+ if(t==='BUTTON'||(t==='A'&&/btn|button/i.test(e.className)))c.push('btn');if(t==='A')c.push('lnk');
+ if(/^(SECTION|HEADER|FOOTER|NAV|MAIN|ARTICLE|ASIDE)$/.test(t))c.push('sec');
+ if(/display:\s*none/i.test(st)||e.hasAttribute('hidden'))c.push('hid');
+ if((t==='IMG'&&!e.getAttribute('src'))||(t==='IFRAME'&&!embHost(((s0)=>s0.startsWith('//')?'https:'+s0:s0)((e.getAttribute('src')||'').trim()))))c.push('rev');return c}
+function list(){if(!model)return;const all=[...model.body.querySelectorAll('[data-hvs-id]')].map(e=>({e,c:cats(e)})),n={};
+ all.forEach(x=>x.c.forEach(k=>n[k]=(n[k]||0)+1));
+ $('#chips').innerHTML=Object.entries(CATS).map(([k,v])=>`<button data-c=${k} class="${k===cat?'on':''}">${v}${k==='lay'?'':' '+(n[k]||0)}</button>`).join('');
+ if(cat==='lay'){$('#list').innerHTML=tree();return}const L=all.filter(x=>x.c.includes(cat)).slice(0,250);
+ $('#list').innerHTML=L.length?L.map(({e})=>{const i=e.getAttribute('data-hvs-id');return`<div class="it ${+i===sel?'s':''}" data-i=${i}>&lt;${e.tagName.toLowerCase()}&gt; ${esc((e.textContent||e.getAttribute('src')||e.getAttribute('href')||'').trim().slice(0,40))}</div>`}).join(''):'Sin elementos'}
+$('#chips').onclick=e=>{if(e.target.dataset.c){cat=e.target.dataset.c;list()}};
+$('#list').onclick=e=>{const t=e.target.dataset;if(t.t){const i=+t.t;ex.has(i)?ex.delete(i):ex.add(i);return list()}if(t.e){const i=+t.e;hE.has(i)?hE.delete(i):hE.add(i);list();return pv()}const i=e.target.closest('.it');if(i)pick(+i.dataset.i,1)};
+let dg=0;const LS=$('#list'),zone=(e,i)=>{const r=i.getBoundingClientRect(),y=(e.clientY-r.top)/r.height;return y<.33?'b':y>.66?'a':'i'};
+LS.ondragstart=e=>{const i=e.target.closest('.it');dg=i?+i.dataset.i:0};
+LS.ondragover=e=>{const i=e.target.closest('.it');if(!dg||!i||cat!=='lay')return;e.preventDefault();LS.querySelectorAll('.dbf,.daf,.din').forEach(x=>x.classList.remove('dbf','daf','din'));i.classList.add({b:'dbf',a:'daf',i:'din'}[zone(e,i)])};
+LS.ondrop=e=>{const i=e.target.closest('.it');if(!dg||!i)return;e.preventDefault();moveEl(dg,+i.dataset.i,zone(e,i));dg=0};
+LS.ondragend=()=>{dg=0;list()};
+function pick(id,go){sel=id;exp(id);list();props();frame.contentWindow&&frame.contentWindow.postMessage({hvs:1,t:'sel',id,go},'*')}
+/* ---------- imágenes ---------- */
+async function procImg(file,mode,webp,qq){let blob=file,type=file.type;
+ if(webp&&/jpeg|png/.test(type)){const bm=await createImageBitmap(file),c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;c.getContext('2d').drawImage(bm,0,0);const b=await new Promise(r=>c.toBlob(r,'image/webp',qq/100));if(b&&b.type==='image/webp'){blob=b;type=b.type}}
+ const du=await readURL(blob);if(mode!=='file')return du;
+ let n=file.name.replace(/[^\w.-]/g,'_');if(type==='image/webp')n=n.replace(/\.\w+$/,'')+'.webp';const p='assets/imagenes/'+(an++)+'-'+n;assets[p]={blob,du,type};return p}
+async function imgDialog(){const p=dlg('Imagen',`<input type=file accept="image/*" id=f><div id=inf class=mut>Selecciona una imagen (sin reducir su resolución).</div><img id=pi style="max-width:100%;max-height:150px;margin:6px 0">
+<label><input type=radio name=m value=b64 checked> Integrar en Base64</label><label><input type=radio name=m value=file> Archivo independiente (ZIP)</label>
+<label><input type=checkbox id=w> Convertir a WebP (solo JPEG/PNG; pierde metadatos), calidad <input type=number id=q value=85 min=40 max=100 style="width:64px"></label>`,'Aplicar'),o=dlg.last;
+ o.querySelector('#f').onchange=async e=>{const f=e.target.files[0];if(!f)return;const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{o.querySelector('#inf').textContent=`${f.name} · ${i.naturalWidth}×${i.naturalHeight} · ${(f.size/1024).toFixed(0)} KB`+(i.naturalWidth<600?' · ⚠ resolución baja':'')};i.onerror=()=>o.querySelector('#inf').textContent='⚠ Imagen corrupta o no compatible';i.src=u;o.querySelector('#pi').src=u};
+ const r=await p;if(!r)return null;const f=o.querySelector('#f').files[0];if(!f){o.remove();toast('No elegiste ningún archivo','w');return null}
+ try{const v=await procImg(f,o.querySelector('[name=m]:checked').value,o.querySelector('#w').checked,+o.querySelector('#q').value);o.remove();return v}catch(x){o.remove();toast('No se pudo procesar la imagen: '+x.message,'e');return null}}
+async function repImg(id){const e=q(id),v=await imgDialog();if(!v)return;
+ if(e.tagName==='IMG'){push({k:'group',list:[{k:'attr',id,n:'src',a:e.getAttribute('src'),b:v},{k:'attr',id,n:'srcset',a:e.getAttribute('srcset'),b:null}]})}else setAttrBg(id,v)}
+async function bgImg(id){const v=await imgDialog();if(v)setAttrBg(id,v)}
+async function setAttrBg(id,v){const e=q(id),cur=e.style.getPropertyValue('background-image');if(/gradient|,/.test(cur)&&!await ask('Este fondo tiene varias capas. Se reemplazará solo la declaración de fondo en línea. ¿Continuar?'))return;setSt(id,'background-image',`url("${v}")`)}
+async function addImg(id){const v=await imgDialog();if(v)ins(id,`<img src="${esc(v)}" alt="" style="max-width:100%;height:auto">`)}
+/* ---------- vídeos ---------- */
+/* ---------- código de inserción (Compartir → Insertar: iframe o blockquote) ---------- */
+const EMBH=[[/^(www\.)?youtube(-nocookie)?\.com$/,'YouTube',/^\/embed\//],[/^player\.vimeo\.com$/,'Vimeo',/^\/video\//],[/^(www\.)?tiktok\.com$/,'TikTok',/^\/(embed|player)\//],[/^(www\.)?instagram\.com$/,'Instagram',/^\/(p|reel|tv)\/[\w-]+\/embed/],[/^(www\.)?facebook\.com$/,'Facebook',/^\/plugins\/(video|post)\.php$/],[/^(www\.)?dailymotion\.com$/,'Dailymotion',/^\/embed\/video\//],[/^(www\.)?loom\.com$/,'Loom',/^\/embed\//],[/^streamable\.com$/,'Streamable',/^\/e\//],[/^platform\.(twitter|x)\.com$/,'X',/^\/embed\//],[/^(fast\.wistia\.net|[\w-]+\.wistia\.com)$/,'Wistia',/^\/embed\//],[/^player\.twitch\.tv$/,'Twitch',/^\/$/],[/^rumble\.com$/,'Rumble',/^\/embed\//]];
+let embNote='';
+function embHost(s){try{const u=new URL(s);if(u.protocol!=='https:')return null;const h=EMBH.find(x=>x[0].test(u.hostname));return h?{u,n:h[1],p:h[2]}:null}catch{return null}}
+const mkIf=src=>{const f=new DOMParser().parseFromString('<iframe></iframe>','text/html').querySelector('iframe');f.setAttribute('src',src);return f};
+function embIframe(f){let s=(f.getAttribute('src')||'').trim();if(s.startsWith('//'))s='https:'+s;const h=embHost(s);
+ if(!h)throw Error('Ese iframe no es de una plataforma admitida o no usa https. Admito: YouTube, Vimeo, TikTok, Instagram, Facebook, X, Dailymotion, Loom, Streamable, Wistia, Twitch y Rumble.');
+ if(!h.p.test(h.u.pathname))throw Error('El enlace del iframe no parece un código de inserción de '+h.n+'. Cópialo desde «Compartir → Insertar».');
+ const num=a=>{const m=/^\s*(\d{2,4})(px)?\s*$/.exec(f.getAttribute(a)||'');return m?+m[1]:0},w=num('width'),hh=num('height');
+ const dflt={TikTok:'width:325px;max-width:100%;height:575px',Instagram:'width:100%;max-width:540px;height:640px',X:'width:100%;max-width:550px;height:520px',Facebook:'width:100%;max-width:560px;aspect-ratio:16/9'}[h.n]||'width:100%;aspect-ratio:16/9';
+ const st=(w>=150&&hh>=100)?`width:100%;max-width:${w}px;aspect-ratio:${w}/${hh}`:dflt;
+ const OK=['accelerometer','autoplay','clipboard-write','encrypted-media','gyroscope','picture-in-picture','web-share','fullscreen'];
+ let al=(f.getAttribute('allow')||'').split(';').map(x=>x.trim()).filter(x=>OK.includes(x.split(/\s+/)[0]));if(!al.length)al=['encrypted-media','picture-in-picture'];
+ const fs=f.hasAttribute('allowfullscreen')||al.some(x=>/^fullscreen/.test(x)),title=(f.getAttribute('title')||'').trim().slice(0,120)||'Vídeo de '+h.n;
+ embNote='Inserción de '+h.n+' añadida.'+(h.n==='Twitch'&&!h.u.searchParams.get('parent')?' Twitch exige el parámetro parent=tu-dominio en el enlace.':'');
+ return`<iframe src="${esc(h.u.href)}" title="${esc(title)}" loading="lazy" allow="${esc(al.join('; '))}"${fs?' allowfullscreen':''} referrerpolicy="strict-origin-when-cross-origin" style="${st};border:0"></iframe>`}
+function embBlock(b,opt){const cls=b.className||'',cite=b.getAttribute('cite')||'',links=[...b.querySelectorAll('a[href]')].map(a=>a.getAttribute('href')),vid=x=>(String(x||'').match(/\/video\/(\d{6,25})/)||[])[1];
+ if(/tiktok-embed/.test(cls)||/tiktok\.com/.test(cite)){const id=b.getAttribute('data-video-id')||vid(cite)||links.map(vid).find(Boolean);
+  if(!/^\d{6,25}$/.test(id||''))throw Error('No encontré el número del video de TikTok en ese código (¿es una publicación de fotos?).');
+  embNote='Inserción de TikTok añadida con su reproductor oficial; depende de Internet y de la plataforma.';return ttBlock(id,/^https:\/\/www\.tiktok\.com\/@[\w.-]+\/video\/\d+$/.test(cite)?cite:'')}
+ if(/instagram-media/.test(cls)||b.hasAttribute('data-instgrm-permalink')){const l=b.getAttribute('data-instgrm-permalink')||links.find(x=>/instagram\.com\/(p|reels?|tv)\//.test(x))||'',m=l.match(/instagram\.com\/(p|reels?|tv)\/([\w-]+)/);
+  if(!m)throw Error('No encontré el enlace de la publicación de Instagram en ese código.');return embIframe(mkIf('https://www.instagram.com/'+(m[1]==='reels'?'reel':m[1])+'/'+m[2]+'/embed/'))}
+ if(/twitter-tweet/.test(cls)){const m=links.map(l=>(l.match(/\/status\/(\d+)/)||[])[1]).filter(Boolean).pop();if(!m)throw Error('No encontré el número de la publicación de X en ese código.');return embIframe(mkIf('https://platform.twitter.com/embed/Tweet.html?id='+m))}
+ throw Error('No reconozco ese bloque de inserción (admito TikTok, Instagram y X).')}
+function embHTML(code,opt){code=String(code||'').trim();if(!code)throw Error('Pega el código de inserción.');if(code.length>20000)throw Error('El código es demasiado largo.');
+ const d=new DOMParser().parseFromString(code,'text/html');let h;embNote='';   /* análisis inerte: no se ejecuta nada */
+ const f=d.querySelector('iframe'),fb=d.querySelector('[data-href*="facebook.com"]'),b=d.querySelector('blockquote');
+ if(f)h=embIframe(f);else if(fb)h=embIframe(mkIf('https://www.facebook.com/plugins/video.php?show_text=false&href='+encodeURIComponent(fb.getAttribute('data-href'))));else if(b)h=embBlock(b,opt);
+ else if(/^https?:\/\//i.test(code))throw Error('Eso es un enlace, no un código. Para enlaces usa YouTube o TikTok, o pega el código de «Insertar».');
+ else throw Error('No encontré un iframe ni un blockquote de inserción en ese código.');
+ if(d.querySelector('script')&&!d.querySelector('blockquote.tiktok-embed'))embNote+=' Se omitió el script de la plataforma: no hace falta y así tu página no carga código externo.';return h}
+/* Al pulsar ▶ la portada se sustituye por el iframe COPIANDO su estilo en línea (márgenes, ancho, alineación...), para que no se mueva */
+const FACJS="var d=this,f=document.createElement('iframe');f.allow='encrypted-media;autoplay;picture-in-picture;fullscreen';f.allowFullscreen=true;f.title=d.getAttribute('aria-label')||'Vídeo';f.setAttribute('referrerpolicy','strict-origin-when-cross-origin');f.style.cssText=d.getAttribute('style')||'';['background','color','align-items','justify-content','font-size','cursor'].forEach(function(p){f.style.removeProperty(p)});f.style.display='block';f.src=d.dataset.s;d.replaceWith(f);",
+FACK="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}";
+const YTALLOW='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',TTS='<script async src="https://www.tiktok.com/embed.js"><\/script>';
+const ttBlock=(id,cite)=>{cite=cite||'https://www.tiktok.com/@u/video/'+id;return'<div class="hvs-tt" style="width:100%;max-width:605px;min-height:500px;margin:0 auto"><blockquote class="tiktok-embed" cite="'+esc(cite)+'" data-video-id="'+id+'" style="max-width:605px;min-width:325px;margin:0 auto"><section><a target="_blank" href="'+esc(cite)+'">Ver video en TikTok</a></section></blockquote>'+TTS+'</div>'};
+const fac=(src,css,bg,lbl)=>`<div class="hvs-fac" role="button" tabindex="0" aria-label="${lbl}" data-s="${src}" style="${css};background:#111 ${bg} center/cover;color:#fff;display:flex;align-items:center;justify-content:center;font-size:48px;cursor:pointer" onclick="${FACJS}" onkeydown="${FACK}">▶</div>`;
+function vidHTML(t,val,opt){
+ if(t==='emb')return embHTML(val,opt);
+ if(t==='yt'){let u;try{u=new URL(val)}catch{throw Error('Enlace no válido')}const h=u.hostname.replace(/^www\.|^m\./,'');let i=h==='youtu.be'?u.pathname.slice(1):h.startsWith('youtube')?(u.searchParams.get('v')||(u.pathname.match(/^\/(embed|shorts|live)\/([\w-]{11})/)||[])[2]):'';
+  if(!/^[\w-]{11}$/.test(i||''))throw Error('No reconozco ese enlace de YouTube (youtube.com/watch?v=, youtu.be/, /shorts/, /embed/).');
+  return`<iframe src="https://www.youtube.com/embed/${i}?rel=0&modestbranding=1" title="Vídeo de YouTube" loading="lazy" allow="${YTALLOW}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;aspect-ratio:16/9;border:0"></iframe>`}
+ if(t==='tt'){let u;try{u=new URL(val)}catch{throw Error('Enlace no válido')}if(!/(^|\.)tiktok\.com$/.test(u.hostname))throw Error('El dominio no es tiktok.com');const m=u.pathname.match(/\/(?:video|embed\/v2|player\/v1)\/(\d{6,25})/);if(!m)throw Error('Usa el enlace completo de la publicación (…/video/NÚMERO). Los enlaces cortos vm.tiktok.com no se pueden resolver sin servidor.');
+  const cp=/^\/@[\w.-]+\/video\/\d+/.exec(u.pathname);return ttBlock(m[1],cp?'https://www.tiktok.com'+cp[0]:'')}
+ if(!okU(val)||!/^https?:/i.test(val)&&t==='url')throw Error('URL no válida (usa http o https)');
+ const a=(opt.controls?' controls':'')+(opt.auto?' autoplay':'')+(opt.mute||opt.auto?' muted':'')+(opt.loop?' loop':'');
+ return`<video${a} playsinline preload="metadata"${opt.poster?` poster="${esc(opt.poster)}"`:''} src="${esc(val)}" style="max-width:100%"></video>`}
+async function coverURL(blob,w=480){const bm=await createImageBitmap(blob),k=Math.min(1,w/bm.width),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.82)}
+const framePoster=f=>new Promise(res=>{const v=document.createElement('video'),u=URL.createObjectURL(f),done=x=>{URL.revokeObjectURL(u);res(x)};setTimeout(()=>done(''),8000);v.muted=true;v.preload='auto';v.playsInline=true;v.onerror=()=>done('');v.onloadeddata=()=>{v.currentTime=Math.min(.1,(v.duration||1)/2)};v.onseeked=()=>{try{const k=Math.min(1,640/v.videoWidth),c=document.createElement('canvas');c.width=Math.round(v.videoWidth*k);c.height=Math.round(v.videoHeight*k);c.getContext('2d').drawImage(v,0,0,c.width,c.height);done(c.toDataURL('image/jpeg',.8))}catch{done('')}};v.src=u});
+const wrapVid=h=>'<div class="hvs-vw" style="flex:1 1 100%;grid-column:1/-1;width:100%;min-width:0">'+h+'</div>';
+const vwOf=x=>{const p=x.parentElement;return p&&p.classList.contains('hvs-vw')&&p.children.length===1?p:x};
+function keepLay(e,h){const t=document.createElement('template');t.innerHTML=h;const n=t.content.firstElementChild;if(!n)return h;['margin-top','margin-right','margin-bottom','margin-left','float','align-self','justify-self','border','border-radius','box-shadow','opacity'].forEach(p=>{const v=e.style.getPropertyValue(p);if(v)n.style.setProperty(p,v)});if(e.style.getPropertyValue('display')==='block'&&!n.classList.contains('hvs-fac'))n.style.setProperty('display','block');return t.innerHTML}
+async function vidDialog(mode,id){const p=dlg(mode==='rep'?'Reemplazar vídeo':'Añadir vídeo',`<label>Tipo</label><select id=t><option value=yt>YouTube</option><option value=tt>TikTok</option><option value=emb>Código de inserción (iframe)</option><option value=url>URL directa de vídeo</option><option value=file>Archivo de mi computadora</option></select>
+<label id=el>Enlace</label><input id=u placeholder="https://…"><textarea id=e rows=5 placeholder="Pega aquí el código que da «Compartir → Insertar» (iframe o blockquote)…" style="width:100%" hidden></textarea><input type=file id=f accept="video/*" hidden><div id=inf class=mut></div><video id=pv controls style="max-width:100%;max-height:140px" hidden></video>
+<div class=mut>YouTube y TikTok se insertan con su reproductor oficial, igual que en tu página de ejemplo: la portada aparece sola y un solo clic reproduce.</div><div id=op hidden><label><input type=checkbox id=c checked> Controles</label><label><input type=checkbox id=a> Autoplay (silenciado)</label><label><input type=checkbox id=m> Silencio</label><label><input type=checkbox id=l> Bucle</label></div>`,'Aplicar'),o=dlg.last,T=o.querySelector('#t');
+ T.onchange=()=>{const f=T.value==='file',m=T.value==='emb';o.querySelector('#u').hidden=f||m;o.querySelector('#e').hidden=!m;o.querySelector('#el').textContent=m?'Código de inserción':'Enlace';o.querySelector('#f').hidden=!f;o.querySelector('#op').hidden=!/url|file/.test(T.value)};
+ o.querySelector('#f').onchange=e=>{const f=e.target.files[0];if(!f)return;const v=o.querySelector('#pv');v.hidden=false;v.src=URL.createObjectURL(f);v.onloadedmetadata=()=>o.querySelector('#inf').textContent=`${f.name} · ${f.type||'?'} · ${(f.size/1048576).toFixed(1)} MB · ${v.duration.toFixed(1)} s · ${v.videoWidth}×${v.videoHeight}`;v.onerror=()=>o.querySelector('#inf').textContent='⚠ El navegador no puede reproducir este archivo'};
+ const r=await p;if(!r)return;const t=T.value,g=s=>o.querySelector(s),opt={controls:g('#c').checked,auto:g('#a').checked,mute:g('#m').checked,loop:g('#l').checked};
+ try{let v=(t==='emb'?g('#e'):g('#u')).value.trim();if(t==='file'){const f=g('#f').files[0];if(!f)throw Error('Elige un archivo');const pth='assets/videos/'+(an++)+'-'+f.name.replace(/[^\w.-]/g,'_');assets[pth]={blob:f,type:f.type,u:URL.createObjectURL(f)};v=pth}
+  g('.k').disabled=true;
+  if(t==='file'){opt.poster=await framePoster(g('#f').files[0])}
+  const raw=vidHTML(t==='file'?'f':t,v,opt);o.remove();
+  if(mode==='rep'){const e=q(id),h=keepLay(e,stamp(raw));push({k:'outer',id,a:e.outerHTML,b:h,to:+(/data-hvs-id="(\d+)"/.exec(h)||[])[1]})}else ins(id,wrapVid(raw));
+  if(t==='url')toast('URL directa: resultado provisional, no se ha verificado el códec ni el acceso.','w');if(t==='emb'&&embNote)toast(embNote,'o')}catch(x){o.remove();toast(x.message,'e')}}
+/* ---------- vídeos definidos en datos (páginas hechas por IA que dibujan los vídeos con JavaScript) ---------- */
+function vdParse(t){try{return JSON.parse(t)}catch{}
+ try{return JSON.parse(t.replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g,'$1"$2":').replace(/'([^'\\]*)'/g,'"$1"').replace(/,\s*([\]}])/g,'$1'))}catch{return null}}
+const vdUrlKey=x=>['url','link','src','href'].find(k=>typeof x[k]==='string');
+function vdScan(t){const re=/["']?\w*[vV]ideos?\w*["']?\s*:\s*\[/g;let m;
+ while((m=re.exec(t))){const a=m.index+m[0].length-1;let d=0,qt=null,e=-1;
+  for(let i=a;i<t.length;i++){const c=t[i];if(qt){if(c==='\\')i++;else if(c===qt)qt=null;continue}
+   if(c==='"'||c==="'"||c==='`'){qt=c;continue}if(c==='[')d++;else if(c===']'&&--d===0){e=i;break}}
+  if(e<0)continue;const arr=vdParse(t.slice(a,e+1));
+  if(Array.isArray(arr)&&arr.length&&arr.every(x=>x&&typeof x==='object'&&vdUrlKey(x)))return{a,e,arr}}
+ return null}
+function vdFind(){if(!model)return null;for(const s of model.querySelectorAll('script:not([src])')){const t=s.textContent;if(!/videos?/i.test(t))continue;const r=vdScan(t);if(r)return{s,t,...r}}return null}
+function vdDialog(){const F=vdFind();if(!F)return toast('No encontré una lista de vídeos en los datos de esta página.','w');
+ const items=F.arr.map(x=>({...x})),k0=items[0],UK=vdUrlKey(k0),PK=['plataforma','platform','tipo','type'].find(k=>k in k0)||'plataforma',TK=['titulo','title','nombre','name'].find(k=>k in k0)||'titulo';
+ const plat=u=>/tiktok\.com/i.test(u)?'tiktok':/youtu\.?be/i.test(u)?'youtube':'';
+ const row=(v,i)=>{const p=String(v[PK]||plat(v[UK]||'')||'youtube'),op=['tiktok','youtube'];if(!op.includes(p))op.push(p);
+  return`<div class=vdr data-i=${i} style="border:1px solid var(--bd);border-radius:8px;padding:8px;margin:6px 0"><div class=row><select data-f=P>${op.map(x=>`<option ${x===p?'selected':''}>${esc(x)}</option>`).join('')}</select><button data-x=${i}>Quitar</button></div><input data-f=U placeholder="Enlace del vídeo (https://…)" value="${esc(v[UK]||'')}"><input data-f=T placeholder="Título" value="${esc(v[TK]||'')}" style="margin-top:4px"></div>`};
+ dlg('Vídeos de la página','<div class=mut>Esta página dibuja sus vídeos desde una lista. Cambia aquí los enlaces: la página los seguirá mostrando con su propio diseño (TikTok y YouTube como en el original).</div><div id=vdl></div><button id=vda>+ Añadir vídeo</button>','Aplicar');
+ const o=dlg.last,L=o.querySelector('#vdl'),draw=()=>{L.innerHTML=items.map(row).join('')};draw();
+ L.oninput=L.onchange=e=>{const r=e.target.closest('.vdr');if(!r)return;const v=items[+r.dataset.i],f=e.target.dataset.f;
+  if(f==='U'){v[UK]=e.target.value.trim();const p=plat(v[UK]);if(p){v[PK]=p;r.querySelector('[data-f=P]').value=p}}else if(f==='T')v[TK]=e.target.value;else if(f==='P')v[PK]=e.target.value};
+ L.onclick=e=>{if(e.target.dataset.x!==undefined){items.splice(+e.target.dataset.x,1);draw()}};
+ o.querySelector('#vda').onclick=()=>{items.push({[PK]:'youtube',[UK]:'',[TK]:''});draw()};
+ o.querySelector('.k').onclick=()=>{try{
+  items.forEach((v,i)=>{const u=v[UK]||'',n='Vídeo '+(i+1)+': ';if(!/^https?:\/\//i.test(u))throw Error(n+'el enlace debe empezar por https://');
+   if(v[PK]==='tiktok'&&!/\/video\/\d{6,25}/.test(u))throw Error(n+'usa el enlace completo de TikTok (…/video/NÚMERO); los enlaces cortos vm.tiktok.com no funcionan.');
+   if(v[PK]==='youtube'&&!/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)[\w-]{11}/.test(u))throw Error(n+'no reconozco ese enlace de YouTube.')});
+  const ind=(/(^|\n)([ \t]*)[^\n]*$/.exec(F.t.slice(0,F.a))||[])[2]||'',js=JSON.stringify(items,null,2).replace(/<\//g,'<\\/').split('\n').join('\n'+ind),nt=F.t.slice(0,F.a)+js+F.t.slice(F.e+1);
+  let id=+F.s.getAttribute('data-hvs-id');if(!id){id=nid++;F.s.setAttribute('data-hvs-id',id)}
+  o.remove();push({k:'text',id,a:F.t,b:nt});toast('Lista de vídeos actualizada','o')}catch(x){toast(x.message,'e')}};}
+$('#bVd').onclick=vdDialog;
+/* ---------- panel de propiedades ---------- */
+const MEDIA=/^(IMG|VIDEO|IFRAME|BR|HR|SCRIPT|STYLE|PICTURE|SVG|INPUT)$/;
+function props(){const R=$('#R'),e=sel&&q(sel);if(!e){R.innerHTML='<div class=mut>Activa «Editar página» y haz clic en un elemento.</div>';return}
+ const t=e.tagName,hid=/display:\s*none/i.test(e.getAttribute('style')||''),s=n=>e.style.getPropertyValue(n)||'',kids=e.children.length,A=n=>esc(e.getAttribute(n)||'');
+ let h=`<div class=mut>&lt;${t.toLowerCase()}&gt; #${sel}</div><div class=row><button data-a=up>↑ Padre</button><button data-a=hide>${hid?'Mostrar':'Ocultar'}</button><button data-a=del>Eliminar</button></div>`;
+ if(!MEDIA.test(t)&&!e.classList.contains('hvs-fac')&&!isTT(e)&&e.textContent.trim()){h+=`<h4>Texto</h4>`+(/typed|typewriter|typing|split|anim/i.test(e.className)?'<div class=mut>⚠ Posible texto animado: si cambia su estructura el efecto podría fallar.</div>':'')+(kids?'<div class=mut>Contiene elementos internos; se edita el HTML interno (los scripts se descartan).</div>':'')+`<textarea id=tx>${esc(kids?e.innerHTML:e.textContent)}</textarea><button data-a=${kids?'htm':'txt'}>Aplicar texto</button>`}
+ if(t==='A'||t==='BUTTON'){if(t==='A')h+=`<label>Destino (href)</label><input data-at=href value="${A('href')}"><label>WhatsApp: teléfono con prefijo</label><input id=wp placeholder="59171234567"><label>Mensaje</label><input id=wm><button data-a=wa style="margin-top:5px">Generar enlace</button>`;if(t==='BUTTON'&&e.getAttribute('onclick'))h+='<div class=mut>Este botón ejecuta JavaScript; se conserva.</div>'}
+ if(t==='IMG')h+=`<h4>Imagen</h4><label>src</label><input data-at=src value="${/^data:/.test(A('src'))?'(Base64 integrado)':A('src')}" ${/^data:/.test(A('src'))?'disabled':''}><label>alt</label><input data-at=alt value="${A('alt')}"><div class=row><button data-a=rimg class=p>Reemplazar imagen</button></div>`;
+ if(t==='VIDEO'||t==='IFRAME'||e.classList.contains('hvs-fac')||isTT(e))h+=`<h4>Vídeo</h4><div class=row><button data-a=vrep class=p>Reemplazar vídeo</button><button data-a=vdel>Eliminar vídeo</button>${e.classList.contains('hvs-fac')?'<button data-a=cov>Cambiar portada</button>':''}</div>`;
+ h+=`<h4>Orden y alineación</h4><div class=row><button data-a=mu>↑ Subir</button><button data-a=md>↓ Bajar</button></div><div class=row><button data-a=al-l>Bloque izq.</button><button data-a=al-c>Centro</button><button data-a=al-r>Der.</button></div><div class=mut>Alinear bloque usa márgenes auto (requiere ancho definido). Para mover entre contenedores arrastra en «Capas».</div>`;
+{const pr=t==='IMG'?'object-position':'background-position',op=(a,v)=>a.map(x=>`<option ${v===x?'selected':''}>${x}</option>`).join('');h+=`<h4>Encuadre</h4>`+(t==='IMG'?`<label>object-fit (usa cover para ver el encuadre)</label><select data-s=object-fit>${op(['','cover','contain','fill','none','scale-down'],s('object-fit'))}</select>`:`<label>background-size</label><select data-s=background-size>${op(['','cover','contain','auto'],s('background-size'))}</select><label>background-repeat</label><select data-s=background-repeat>${op(['','no-repeat','repeat','repeat-x','repeat-y'],s('background-repeat'))}</select>`)+`<label>Arrastra para encuadrar</label><div id=pad data-p="${pr}" style="height:110px;border:1px dashed var(--ac);border-radius:6px;position:relative;touch-action:none"><i style="position:absolute;width:10px;height:10px;border-radius:50%;background:var(--ac);left:50%;top:50%;margin:-5px"></i></div><input data-s=${pr} value="${esc(s(pr))}" placeholder="50% 50%">`}
+h+=`<h4>Añadir</h4><div class=row><button data-a=aimg>Imagen después</button><button data-a=vadd>Vídeo después</button></div><h4>Fondo y estilo</h4><div class=row><button data-a=bg>Imagen de fondo…</button></div>
+ <label>Color de texto</label><input type=color data-s=color value="${/^#/.test(s('color'))?s('color'):'#000000'}"><label>Color de fondo</label><input type=color data-s=background-color value="${/^#/.test(s('background-color'))?s('background-color'):'#ffffff'}">
+ ${['font-size','border-radius','padding','margin','width','max-width','height','min-height','aspect-ratio','opacity','border'].map(n=>`<label>${n}</label><input data-s=${n} value="${esc(s(n))}" placeholder="p. ej. 16px">`).join('')}
+ <label>text-align</label><select data-s=text-align>${['','left','center','right'].map(v=>`<option ${s('text-align')===v?'selected':''}>${v}</option>`).join('')}</select>`;R.innerHTML=h}
+$('#R').onchange=e=>{const t=e.target,id=sel;if(!id)return;if(t.dataset.s)setSt(id,t.dataset.s,t.value);else if(t.dataset.at){if(/^(href|src)$/.test(t.dataset.at)&&!okU(t.value,t.dataset.at==='src')){toast('Esquema de URL no permitido','e');return props()}setAttr(id,t.dataset.at,t.value)}};
+$('#R').onclick=async e=>{const a=e.target.dataset.a,id=sel;if(!a||!id)return;const el=q(id);
+ if(a==='up'){const p=el.parentElement;if(p&&p!==model.body)pick(+p.getAttribute('data-hvs-id'),1);else toast('Es el elemento superior','w')}
+ else if(a==='hide')/display:\s*none/i.test(el.getAttribute('style')||'')?setSt(id,'display',''):setSt(id,'display','none');
+ else if(a==='del'||a==='vdel'){if(!await ask(el.querySelector('form,script,video,iframe')?'Contiene formularios, scripts o reproductores. ¿Eliminar de todos modos? (se puede deshacer)':'¿Eliminar este elemento? Podrás deshacerlo.'))return;{const tg=vwOf(el),tid=+tg.getAttribute('data-hvs-id');push({k:'outer',id:tid,a:tg.outerHTML,b:`<!--hvs:${tid}-->`})}sel=null;props()}
+ else if(a==='txt'){const v=$('#tx').value;push({k:'text',id,a:el.textContent,b:v})}
+ else if(a==='htm'){const d=document.createElement('template');d.innerHTML=$('#tx').value;d.content.querySelectorAll('script').forEach(x=>x.remove());push({k:'html',id,a:el.innerHTML,b:d.innerHTML})}
+ else if(a==='wa'){const p=$('#wp').value.replace(/\D/g,'');if(p.length<7)return toast('Introduce un teléfono válido con prefijo','e');setAttr(id,'href','https://wa.me/'+p+($('#wm').value?'?text='+encodeURIComponent($('#wm').value):''));props()}
+ else if(a==='mu'){const E=vwOf(el),p=E.previousElementSibling;p?moveEl(+E.getAttribute('data-hvs-id'),+p.getAttribute('data-hvs-id'),'b'):toast('Ya es el primero de su contenedor','w')}
+ else if(a==='md'){const E=vwOf(el),n=E.nextElementSibling;n?moveEl(+E.getAttribute('data-hvs-id'),+n.getAttribute('data-hvs-id'),'a'):toast('Ya es el último de su contenedor','w')}
+ else if(a.startsWith('al-')){const m={l:['0','auto'],c:['auto','auto'],r:['auto','0']}[a[3]],o={'margin-left':m[0],'margin-right':m[1]};if(/^(IMG|VIDEO|IFRAME|A|SPAN|BUTTON)$/.test(el.tagName))o.display='block';grp(id,o)}
+ else if(a==='cov'){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async()=>{const f=i.files[0];if(!f)return;try{setSt(id,'background','#111 url("'+await coverURL(f,400)+'") center/cover')}catch{toast('No se pudo leer la imagen','e')}};i.click()}
+ else if(a==='rimg')repImg(id);else if(a==='aimg')addImg(id);else if(a==='bg')bgImg(id);else if(a==='vrep')vidDialog('rep',id);else if(a==='vadd')vidDialog('add',id)};
+/* ---------- buscar y reemplazar ---------- */
+function matches(qq){const r=[];if(!qq)return r;const w=model.createTreeWalker(model.body,4);while(w.nextNode()){const n=w.currentNode,p=n.parentElement;if(!p||/^(SCRIPT|STYLE)$/.test(p.tagName)||!p.hasAttribute('data-hvs-id'))continue;if(n.data.includes(qq))r.push({id:+p.getAttribute('data-hvs-id'),i:[...p.childNodes].indexOf(n),t:n.data})}return r}
+$('#bFind').onclick=()=>{if(!model)return;const m=matches($('#fq').value);$('#fres').innerHTML=m.length?m.map((x,k)=>`<div class=it data-i=${x.id}>${esc(x.t.trim().slice(0,30))} <button data-k=${k} style="padding:0 5px">↻</button></div>`).join(''):'<div class=mut>Sin coincidencias</div>';$('#fres').m=m};
+const rep1=m=>{const f=$('#fq').value,r=$('#fr').value;return{k:'tn',id:m.id,i:m.i,a:m.t,b:m.t.split(f).join(r)}};
+$('#fres').onclick=e=>{const b=e.target.closest('button');if(b){push(rep1($('#fres').m[+b.dataset.k]));$('#bFind').click()}else if(e.target.closest('.it'))pick(+e.target.closest('.it').dataset.i,1)};
+$('#bRall').onclick=async()=>{if(!model)return;const m=matches($('#fq').value);if(!m.length)return toast('Sin coincidencias','w');if(await ask(`Reemplazar ${m.length} coincidencia(s) en textos visibles (no en scripts ni estilos)?`)){push({k:'group',list:m.map(rep1)});$('#bFind').click()}};
+/* ---------- estadísticas, validación y exportación ---------- */
+const sz=n=>n>1048576?(n/1048576).toFixed(2)+' MB':(n/1024).toFixed(1)+' KB';
+function stats(){const h=ser(model,1),b64=(h.match(/data:[^"')\s]+/g)||[]).reduce((s,x)=>s+x.length,0),ext=new Set((h.match(/(?:src|href)="https?:[^"]+/g)||[]).map(x=>x)).size,as=Object.values(assets).reduce((s,a)=>s+a.blob.size,0);
+ return{orig:new Blob([orig]).size,cur:new Blob([h]).size,imgs:model.body.querySelectorAll('img').length,emb:(h.match(/src="data:image/g)||[]).length,vids:model.body.querySelectorAll('video,iframe,blockquote.tiktok-embed').length,ext,b64,as,tot:new Blob([h]).size+as}}
+function warn(h){const w=[];const d=new DOMParser().parseFromString(h,'text/html');if(!d.body)w.push('El HTML no se puede analizar');if(/data-hvs-id/.test(h))w.push('Quedan marcadores del editor');
+ d.querySelectorAll('img[src=""],video[src=""],iframe[src=""]').forEach(()=>w.push('Hay referencias vacías'));d.querySelectorAll('[src^="assets/"],[style*="assets/"]').forEach(e=>{const p=(e.getAttribute('src')||(e.getAttribute('style').match(/assets\/[^"')]+/)||[''])[0]);if(p&&!assets[p])w.push('Ruta sin recurso: '+p)});
+ return[...new Set(w)]}
+function dl(blob,n){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+$('#bSt').onclick=async()=>{if(!model)return toast('Importa primero un HTML','w');const s=stats(),big=s.tot>5242880?'<p style="color:var(--dg)">⚠ Más de 5 MB (recomendación orientativa, no un límite universal). Base64 añade ≈33 %; usa archivos independientes para vídeos.</p>':'';
+ const o=await dlg('Estadísticas',`<table>${[['HTML original',sz(s.orig)],['HTML modificado',sz(s.cur)],['Imágenes / integradas',s.imgs+' / '+s.emb],['Vídeos',s.vids],['Recursos externos (src/href)',s.ext],['Datos Base64',sz(s.b64)],['Recursos independientes',sz(s.as)],['Tamaño estimado de exportación',sz(s.tot)]].map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join('')}</table>${big}<p class=mut>Información de alojamiento: consulta la documentación oficial de cada plataforma; los límites cambian.</p>`,'Cerrar');o&&o.remove()};
+$('#bHtml').onclick=()=>{if(!model)return toast('Importa primero un HTML','w');let h=ser(model,1);for(const[p,a]of Object.entries(assets)){if(!h.includes(p))continue;if(a.du)h=h.split(p).join(a.du);else toast('El vídeo local '+p+' no cabe en un HTML único; usa el ZIP.','w')}
+ const w=warn(h);w.forEach(x=>toast(x,'w'));hid0();dgWarn();dl(new Blob([h],{type:'text/html'}),'index-editado.html');clean=ops.length;refresh();toast('HTML exportado','o')};
+const CRC=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return b=>{let c=-1;for(let i=0;i<b.length;i++)c=t[(c^b[i])&255]^(c>>>8);return(c^-1)>>>0}})();
+function zip(files){const E=new TextEncoder(),parts=[],cen=[];let off=0;const u16=v=>[v&255,v>>8&255],u32=v=>[v&255,v>>8&255,v>>16&255,v>>24&255];
+ for(const f of files){const n=E.encode(f.n),c=CRC(f.d),hd=new Uint8Array([0x50,0x4b,3,4,20,0,0,8,0,0,0,0,0x21,0,...u32(c),...u32(f.d.length),...u32(f.d.length),...u16(n.length),0,0]);parts.push(hd,n,f.d);
+  cen.push(new Uint8Array([0x50,0x4b,1,2,20,0,20,0,0,8,0,0,0,0,0x21,0,...u32(c),...u32(f.d.length),...u32(f.d.length),...u16(n.length),0,0,0,0,0,0,0,0,0,0,0,0,...u32(off)]),n);off+=hd.length+n.length+f.d.length}
+ const cl=cen.reduce((s,x)=>s+x.length,0);return new Blob([...parts,...cen,new Uint8Array([0x50,0x4b,5,6,0,0,0,0,...u16(files.length),...u16(files.length),...u32(cl),...u32(off),0,0])],{type:'application/zip'})}
+$('#bZip').onclick=async()=>{if(!model)return toast('Importa primero un HTML','w');const h=ser(model,1),f=[{n:'proyecto/index.html',d:new TextEncoder().encode(h)}];
+ for(const[p,a]of Object.entries(assets))if(h.includes(p))f.push({n:'proyecto/'+p,d:new Uint8Array(await a.blob.arrayBuffer())});
+ warn(h).forEach(x=>toast(x,'w'));hid0();dgWarn();dl(zip(f),'proyecto.zip');clean=ops.length;refresh();toast(`ZIP exportado (${f.length} archivo/s, sin compresión)`,'o')};
+$('#bSave').onclick=async()=>{if(!model)return toast('Nada que guardar','w');const A={};for(const[p,a]of Object.entries(assets))A[p]={type:a.type,du:a.du||await readURL(a.blob)};
+ dl(new Blob([JSON.stringify({hvs:1,name,orig,ops,A,an})],{type:'application/json'}),name+'.hvs.json');clean=ops.length;refresh();toast('Proyecto guardado como archivo descargable','o')};
+async function loadProj(t,n){let j;try{j=JSON.parse(t);if(j.hvs!==1)throw 0}catch{return toast('Archivo de proyecto no válido','e')}
+ load(j.orig,n);if(!model)return;for(const[p,a]of Object.entries(j.A||{})){const b=await(await fetch(a.du)).blob();assets[p]={blob:b,type:a.type,du:/^image/.test(a.type)?a.du:null,u:URL.createObjectURL(b)}}an=j.an||1;
+ try{(j.ops||[]).forEach(o=>{app(o,1);ops.push(o)})}catch(x){toast('Algunos cambios no se pudieron reaplicar','w')}nid=Math.max(nid,...[...model.querySelectorAll('[data-hvs-id]')].map(e=>+e.getAttribute('data-hvs-id')+1));clean=ops.length;refresh()}
+/* ---------- capas, movimiento, encuadre y diagnóstico ---------- */
+const ex=new Set(),hE=new Set(),SK=/^(SCRIPT|STYLE)$/;
+function exp(id){let p=q(id);while(p&&(p=p.parentElement))if(p.hasAttribute&&p.hasAttribute('data-hvs-id'))ex.add(+p.getAttribute('data-hvs-id'))}
+function tree(){let n=0,out='';(function w(el,d){for(const c of el.children){const i=+c.getAttribute('data-hvs-id');if(!i||SK.test(c.tagName)||n++>600)continue;const k=[...c.children].some(x=>x.hasAttribute('data-hvs-id')&&!SK.test(x.tagName));out+=`<div class="it ${i===sel?'s':''}" draggable=true data-i=${i} style="padding-left:${d*12+4}px"><span data-t=${i}>${k?(ex.has(i)?'▾':'▸'):'·'}</span> ${c.tagName.toLowerCase()}${c.id?'#'+esc(c.id):''} <span class=mut>${esc(c.textContent.trim().slice(0,18))}</span><span data-e=${i} style="float:right" title="Ocultar solo en el editor">${hE.has(i)?'🚫':'👁'}</span></div>`;if(k&&ex.has(i))w(c,d+1)}})(model.body,0);return out||'Vacío'}
+function moveEl(id,tid,pos){const e=q(id),t=q(tid);if(!e||!t||e===t)return;if(e.contains(t))return toast('No puedes mover un elemento dentro de sí mismo','e');
+ if(pos==='i'&&/^(IMG|BR|HR|INPUT|VIDEO|IFRAME|SVG|PICTURE|SELECT|TEXTAREA)$/.test(t.tagName))return toast('Ese elemento no admite contenido: suelta antes o después','e');
+ const P=pos==='i'?t:t.parentElement,O=e.parentElement,pid=P===model.body?0:+P.getAttribute('data-hvs-id'),oid=O===model.body?0:+O.getAttribute('data-hvs-id'),ch=[...P.childNodes].filter(x=>x!==e),i=pos==='i'?ch.length:ch.indexOf(t)+(pos==='a'?1:0);
+ if(O!==P)toast('Cambio de contenedor: revisa la vista móvil (flex/grid pueden reordenar distinto).','w');
+ push({k:'move',id,a:{p:oid,i:[...O.childNodes].indexOf(e)},b:{p:pid,i}});sel=id;exp(id);refresh()}
+function grp(id,o){const e=q(id);push({k:'group',list:Object.entries(o).map(([n,b])=>({k:'style',id,n,a:e.style.getPropertyValue(n),b}))})}
+$('#R').onpointerdown=e=>{const p=e.target.closest('#pad');if(!p)return;p.setPointerCapture(e.pointerId);const d=p.firstElementChild,mv=ev=>{const r=p.getBoundingClientRect(),x=Math.max(0,Math.min(100,Math.round((ev.clientX-r.left)/r.width*100))),y=Math.max(0,Math.min(100,Math.round((ev.clientY-r.top)/r.height*100)));p.v=x+'% '+y+'%';d.style.left=x+'%';d.style.top=y+'%'};mv(e);p.onpointermove=mv;p.onpointerup=()=>{p.onpointermove=null;if(sel&&p.v)setSt(sel,p.dataset.p,p.v)}};
+$('#wd').onchange=e=>{frame.style.width=Math.max(280,+e.target.value||0)+'px'};
+function diag(){const R=[],add=(s,w,e,y,f)=>R.push({s,w,e:(e&&+e.getAttribute('data-hvs-id'))||0,y,f}),B=model.body,ids={};
+ B.querySelectorAll('[id]').forEach(e=>(ids[e.id]=ids[e.id]||[]).push(e));for(const[k,v]of Object.entries(ids))if(v.length>1)add('error','ID duplicado "'+k+'" ('+v.length+')',v[1],'Scripts y anclas usan solo el primero.','Renombra los repetidos.');
+ B.querySelectorAll('img').forEach(e=>{const s=e.getAttribute('src');if(!s)add('error','<img> sin src',e,'No se mostrará.','Reemplaza la imagen.');else if(!/^(https?:|data:|\/\/)/.test(s)&&!assets[s])add('warn','Ruta local "'+s.slice(0,40)+'" no incluida',e,'Al publicar dará 404 si ese archivo no está junto al HTML.','Súbelo a esa ruta o reemplaza la imagen.');if(!e.hasAttribute('alt'))add('rec','<img> sin alt',e,'Accesibilidad y SEO.','Añade un alt.')});
+ B.querySelectorAll('iframe,video').forEach(e=>{if(!(e.getAttribute('src')||e.querySelector('source')))add('error',e.tagName+' sin fuente',e,'No mostrará nada.','Reemplaza el vídeo.')});
+ if(B.querySelector('blockquote.tiktok-embed')&&!model.querySelector('script[src*="tiktok.com/embed.js"]'))add('error','TikTok sin su script',B.querySelector('blockquote.tiktok-embed'),'Sin embed.js el vídeo de TikTok no se muestra.','Vuelve a insertarlo con «Reemplazar vídeo».');
+ B.querySelectorAll('[style]').forEach(e=>{const s=e.getAttribute('style');if(/position:\s*absolute/.test(s))add('warn','position:absolute en línea',e,'Puede romper el diseño responsive.','Usa flex o márgenes.');if(/width:\s*\d{4,}px/.test(s))add('warn','Ancho fijo de 1000 px o más',e,'Desborda en móvil.','Usa max-width:100%.');if(/translate/.test(s)&&/carousel|slide|slider/i.test(e.className))add('warn','Transform en línea dentro de carrusel',e,'Sospechoso de desfase de diapositivas.','Revisa el cálculo del JS.')});
+ B.querySelectorAll('[class*=carousel],[class*=slider],[class*=swiper],[class*=slick],[class*=owl-],[id*=carousel],[id*=slider]').forEach(e=>{if(!e.parentElement.closest('[class*=carousel],[class*=slider],[class*=swiper],[class*=slick]'))add('rec','Carrusel detectado',e,'El editor no puede confirmar por qué se ven medias imágenes: hay que medirlo en un navegador.','Prueba a 360–1440 px y revisa ancho de diapositiva, gap, overflow y translateX.')});
+ model.querySelectorAll('script[src],link[href]').forEach(e=>{const u=e.getAttribute('src')||e.getAttribute('href')||'';if(/^(https?:)?\/\//.test(u))add('rec','Dependencia externa: '+u.slice(0,50),null,'Necesita Internet y puede cambiar.','Aceptable si es un CDN fiable.');else if(u&&!/^(data:|#)/.test(u)&&(e.tagName==='SCRIPT'||/stylesheet/i.test(e.rel)))add('error','Archivo local "'+u+'" no incluido',null,'La vista previa no lo carga y fallará al publicar.','Súbelo junto al HTML.')});return R}
+const hid0=()=>{const n=[...hE].filter(i=>q(i)).length;if(n)toast(n+' elemento(s) ocultos «solo en el editor» (ojo 🚫 en Capas): en el archivo exportado SÍ se verán.','w')};
+const dgWarn=()=>{const n=diag().filter(x=>x.s==='error').length;if(n)toast(n+' error(es) en Diagnóstico: revísalos antes de publicar','w')};
+$('#bDx').onclick=async()=>{if(!model)return toast('Importa primero un HTML','w');const R=diag().sort((a,b)=>'ewr'.indexOf(a.s[0])-'ewr'.indexOf(b.s[0])),L={error:'⛔ Error',warn:'⚠ Aviso',rec:'💡 Recomendación'};
+ const p=dlg('Diagnóstico ('+R.length+')',(R.map((r,k)=>`<div class=it style="white-space:normal;border-bottom:1px solid var(--bd)" data-k=${k}><b>${L[r.s]}</b> ${esc(r.w)}<br><span class=mut>Por qué: ${esc(r.y)}<br>Solución: ${esc(r.f)}${r.e?'<br>Clic para seleccionar':''}</span></div>`).join('')||'Sin hallazgos estáticos.')+'<p class=mut>Análisis estático: no mide desbordamientos reales ni garantiza que la página sea correcta.</p>','Cerrar'),o=dlg.last;
+ o.onclick=e=>{const i=e.target.closest('[data-k]');if(i&&R[+i.dataset.k].e){o.remove();pick(R[+i.dataset.k].e,1)}};const x=await p;x&&x.remove()};
+/* ---------- interfaz general ---------- */
+function refresh(){$('#bVd').disabled=!(model&&vdFind());$('#bUn').disabled=!ops.length;$('#bRe').disabled=!redo.length;$('#dirty').textContent=model?(ops.length>clean?'● Cambios sin guardar/exportar':'✓ Sin cambios pendientes'):'';list();props();pv()}
+function file(f){if(!f)return;const r=new FileReader();r.onerror=()=>toast('No se pudo leer el archivo','e');r.onload=()=>/\.(json|hvs)$/i.test(f.name)?loadProj(r.result,f.name):/\.html?$/i.test(f.name)?load(r.result,f.name):toast('Archivo no compatible: usa .html, .htm o proyecto .json','e');r.readAsText(f)}
+$('#bImp').onclick=()=>$('#fi').click();$('#fi').onchange=e=>{file(e.target.files[0]);e.target.value=''};
+document.body.ondragover=e=>e.preventDefault();document.body.ondrop=e=>{e.preventDefault();file(e.dataTransfer.files[0])};
+$('#bUn').onclick=undo;$('#bRe').onclick=rdo;
+$('#bEd').onclick=()=>{edit=!edit;$('#bEd').classList.toggle('on',edit);frame.contentWindow&&frame.contentWindow.postMessage({hvs:1,t:'mode',edit:edit&&view==='mod'},'*');toast(edit?'Modo edición: los clics seleccionan':'Modo prueba: la página es interactiva')};
+$('#bOr').onclick=()=>{if(!model)return;view=view==='mod'?'orig':'mod';$('#bOr').textContent=view==='orig'?'Ver modificada':'Ver original';pv()};
+document.querySelectorAll('.dv').forEach(b=>b.onclick=()=>{frame.style.width=b.dataset.w;document.querySelectorAll('.dv').forEach(x=>x.classList.toggle('on',x===b))});
+onbeforeunload=e=>{if(model&&ops.length>clean){e.preventDefault();return e.returnValue='x'}};
+const DEMO=`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Demo</title><style>body{font-family:Georgia,serif;margin:0}.hero{background:linear-gradient(#0006,#0006),url(https://picsum.photos/id/1011/1200/600) center/cover;color:#fff;padding:90px 20px;text-align:center}.btn{background:#c0392b;color:#fff;padding:12px 22px;border-radius:30px;text-decoration:none;display:inline-block}.cards{display:flex;gap:16px;padding:30px;flex-wrap:wrap}.card{flex:1;min-width:200px;border:1px solid #ddd;border-radius:12px;padding:16px}.card img{width:100%;height:140px;object-fit:cover;border-radius:8px}.crop{width:200px;height:120px;overflow:hidden;border-radius:50%;margin:20px auto}.crop img{width:100%;height:100%;object-fit:cover}section{padding:24px;text-align:center}</style></head><body>
+<header class="hero"><h1>Restaurante <span style="color:#f1c40f">La Plantilla</span></h1><h2>Sabores de siempre</h2><p>Texto de ejemplo: cámbialo por el de tu cliente.</p><a class="btn" href="https://wa.me/00000000000">Reservar por WhatsApp</a></header>
+<section><h3>Imagen externa e integrada</h3><img src="https://picsum.photos/id/292/500/260" alt="externa" style="max-width:100%"> <img alt="base64" style="width:120px" src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='80'%3E%3Crect width='120' height='80' fill='%234f6bff'/%3E%3C/svg%3E"><div class="crop"><img src="https://picsum.photos/id/433/400/400" alt="recorte"></div></section>
+<section><h3>Vídeos</h3><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" style="width:100%;max-width:560px;aspect-ratio:16/9;border:0" allowfullscreen></iframe><p>Marcador TikTok: reemplázalo con un enlace real.</p><div style="background:#eee;padding:30px;max-width:325px;margin:auto">[TikTok pendiente]</div></section>
+<div class="cards"><div class="card"><img src="https://picsum.photos/id/225/300/200" alt=""><h4>Plato 1</h4><p>Descripción.</p></div><div class="card"><img src="https://picsum.photos/id/312/300/200" alt=""><h4>Plato 2</h4><p>Descripción.</p></div><div class="card"><img src="https://picsum.photos/id/429/300/200" alt=""><h4>Plato 3</h4><p>Descripción.</p></div></div></body></html>`;
+$('#bDemo').onclick=()=>load(DEMO,'demo.html');
+</script></body></html>
